@@ -1,0 +1,25 @@
+# === macOS 系统文件 ===
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# === Xcode 项目 ===
+*.xcworkspace
+xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
+
+
+
+# === xcresult（Xcode test 结果）===
+*.xcresult
+
+# === SwiftPM ===
+.swiftpm
+.build/
+
+# === CocoaPods ===
+Podfile.lock
+*.xcworkspace
