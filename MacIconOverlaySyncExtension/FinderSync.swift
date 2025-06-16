@@ -18,6 +18,10 @@ class FinderSync: FIFinderSync {
     override init() {
         super.init()
         NSLog("9999999999999FinderSync start ~")
+        
+        let url = URL.init(filePath: "/Users/yiyi/projects/verysync")
+        FIFinderSyncController.default().directoryURLs = [url];
+        
         setupBadgeImages()
         
         
@@ -67,10 +71,11 @@ class FinderSync: FIFinderSync {
            let state = watchedPaths["state"] {
             let url = URL(fileURLWithPath: path)
             
-
-            FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-
-            Logger.shared.log("更新图标 - path: \(path), state: \(state)")
+            // 使用异步方式更新图标
+            DispatchQueue.main.async {
+                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
+                Logger.shared.log("更新图标 - path: \(path), state: \(state)")
+            }
         }
     }
     
