@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		000D9CA92E0A7F7800425BA6 /* UnixSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000D9CA82E0A7EEB00425BA6 /* UnixSocket.swift */; };
+		000D9CAA2E0A7F7800425BA6 /* UnixSocket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000D9CA82E0A7EEB00425BA6 /* UnixSocket.swift */; };
 		7DD574702DFE5F7C003BE880 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD5746F2DFE5F7C003BE880 /* AppDelegate.swift */; };
 		7DD574722DFE5F7C003BE880 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DD574712DFE5F7C003BE880 /* ViewController.swift */; };
 		7DD574742DFE5F7E003BE880 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7DD574732DFE5F7E003BE880 /* Assets.xcassets */; };
@@ -42,6 +44,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		000D9CA82E0A7EEB00425BA6 /* UnixSocket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnixSocket.swift; sourceTree = "<group>"; };
 		7DD5746C2DFE5F7C003BE880 /* MacIconOverlay.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacIconOverlay.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7DD5746F2DFE5F7C003BE880 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7DD574712DFE5F7C003BE880 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -74,9 +77,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		000D9CA72E0A7EE000425BA6 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				000D9CA82E0A7EEB00425BA6 /* UnixSocket.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		7DD574632DFE5F7C003BE880 = {
 			isa = PBXGroup;
 			children = (
+				000D9CA72E0A7EE000425BA6 /* Shared */,
 				7DD5746E2DFE5F7C003BE880 /* MacIconOverlay */,
 				7DD574832DFE5FCE003BE880 /* MacIconOverlaySyncExtension */,
 				7DD5746D2DFE5F7C003BE880 /* Products */,
@@ -218,6 +230,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7DD574722DFE5F7C003BE880 /* ViewController.swift in Sources */,
+				000D9CA92E0A7F7800425BA6 /* UnixSocket.swift in Sources */,
 				7DD574702DFE5F7C003BE880 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -227,6 +240,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7DD574852DFE5FCE003BE880 /* FinderSync.swift in Sources */,
+				000D9CAA2E0A7F7800425BA6 /* UnixSocket.swift in Sources */,
 				7DD574942DFE841C003BE880 /* Logger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

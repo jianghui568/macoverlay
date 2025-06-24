@@ -15,11 +15,14 @@ class FinderSync: FIFinderSync {
     private var lastUpdateTime: TimeInterval = 0
     private var timer: Timer?
     
+    
+    let socket = UnixSocket()
+    
     override init() {
         super.init()
         NSLog("9999999999999FinderSync start ~")
         
-        let url = URL.init(filePath: "/Users/yiyi/projects/verysync")
+        let url = URL.init(filePath: "/Users/player/projects/sync")
         FIFinderSyncController.default().directoryURLs = [url];
         
         setupBadgeImages()
@@ -27,6 +30,11 @@ class FinderSync: FIFinderSync {
         
         NSLog("9999999999999FinderSync setup timer")
         setupTimer()
+        
+        
+        socket.startServer { path in
+            NSLog("9999999999999 socket get path: %@", path);
+        }
     }
     
     private func setupBadgeImages() {
@@ -82,6 +90,9 @@ class FinderSync: FIFinderSync {
     
     override func beginObservingDirectory(at url: URL) {
         Logger.shared.log("开始观察目录: \(url.path)")
+        
+        sleep(3)
+        FIFinderSyncController.default().setBadgeIdentifier("syncing", for: url)
     }
     
     override func endObservingDirectory(at url: URL) {
@@ -90,24 +101,25 @@ class FinderSync: FIFinderSync {
     
     override func requestBadgeIdentifier(for url: URL) {
         NSLog("9999999999999 FinderSync requestBadgeIdentifier - url: %@", url.path)
-        
-        guard let watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] else {
-            NSLog("9999999999999 FinderSync requestBadgeIdentifier - no watchedPaths")
-            return
-        }
-        
-        NSLog("9999999999999 FinderSync requestBadgeIdentifier - watchedPaths: %@", watchedPaths)
-        
-        if let path = watchedPaths["path"],
-           let state = watchedPaths["state"] {
-            NSLog("9999999999999 FinderSync requestBadgeIdentifier - comparing paths: %@ vs %@", path, url.path)
-            
-            // 检查路径是否匹配
-            if path == url.path {
-                NSLog("9999999999999 FinderSync requestBadgeIdentifier - setting badge: %@", state)
-                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-            }
-        }
+//        
+//        FIFinderSyncController.default().setBadgeIdentifier("synced", for: url)
+//        guard let watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] else {
+//            NSLog("9999999999999 FinderSync requestBadgeIdentifier - no watchedPaths")
+//            return
+//        }
+//        
+//        NSLog("9999999999999 FinderSync requestBadgeIdentifier - watchedPaths: %@", watchedPaths)
+//        
+//        if let path = watchedPaths["path"],
+//           let state = watchedPaths["state"] {
+//            NSLog("9999999999999 FinderSync requestBadgeIdentifier - comparing paths: %@ vs %@", path, url.path)
+//            
+//            // 检查路径是否匹配
+//            if path == url.path {
+//                NSLog("9999999999999 FinderSync requestBadgeIdentifier - setting badge: %@", state)
+//                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
+//            }
+//        }
     }
     
     // MARK: - Menu and toolbar item support

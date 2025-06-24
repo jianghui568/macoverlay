@@ -15,10 +15,12 @@ class ViewController: NSViewController {
     private let userDefaults = UserDefaults(suiteName: "group.com.mycompany.MacIconOverlay")
     private let watchedPathsKey = "watchedPaths"
     private let lastUpdateTimeKey = "lastUpdateTime"
-    
+    let socket = UnixSocket()
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
+        
+        
     }
     
    
@@ -57,6 +59,9 @@ class ViewController: NSViewController {
             showAlert(message: "请输入有效的路径")
             return
         }
+        
+        socket.send(message: path)
+        return;
         
         // 更新 NSUserDefaults 中的状态
         var watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] ?? [:]
