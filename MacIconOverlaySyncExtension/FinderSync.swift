@@ -15,6 +15,9 @@ class FinderSync: FIFinderSync {
     private var lastUpdateTime: TimeInterval = 0
     private var timer: Timer?
     
+    private var requestQueue: [URL] = []
+    private let queueAccessQueue = DispatchQueue(label: "com.mycompany.MacIconOverlay.queueAccess")
+    private var batchScheduled = false
     
     let socket = UnixSocket()
     
@@ -26,11 +29,6 @@ class FinderSync: FIFinderSync {
         FIFinderSyncController.default().directoryURLs = [url];
         
         setupBadgeImages()
-        
-        
-        NSLog("9999999999999FinderSync setup timer")
-        setupTimer()
-        
         
         socket.startServer { path in
             NSLog("9999999999999 socket get path: %@", path);
@@ -48,51 +46,10 @@ class FinderSync: FIFinderSync {
             FIFinderSyncController.default().setBadgeImage(syncingImage, label: "同步中", forBadgeIdentifier: "syncing")
         }
     }
-
-    
-    private func setupTimer() {
-        // 创建定时器，每秒检查一次更新
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.checkForUpdates()
-        }
-    }
-    
-    private func checkForUpdates() {
-        guard let currentUpdateTime = userDefaults?.double(forKey: lastUpdateTimeKey),
-              currentUpdateTime > lastUpdateTime else {
-            return
-        }
-        
-        // 更新本地时间戳
-        lastUpdateTime = currentUpdateTime
-        
-        // 获取最新的状态数据
-        guard let watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] else {
-            NSLog("9999999999999 FinderSync guard watchedPaths error ------ ")
-            return
-        }
-        
-        NSLog("9999999999999 FinderSync checkForUpdates - watchedPaths: %@", watchedPaths)
-        
-        // 更新所有图标
-        if let path = watchedPaths["path"],
-           let state = watchedPaths["state"] {
-            let url = URL(fileURLWithPath: path)
-            
-            // 使用异步方式更新图标
-            DispatchQueue.main.async {
-                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-                Logger.shared.log("更新图标 - path: \(path), state: \(state)")
-            }
-        }
-    }
     
     
     override func beginObservingDirectory(at url: URL) {
         Logger.shared.log("开始观察目录: \(url.path)")
-        
-        sleep(3)
-        FIFinderSyncController.default().setBadgeIdentifier("syncing", for: url)
     }
     
     override func endObservingDirectory(at url: URL) {
@@ -100,26 +57,38 @@ class FinderSync: FIFinderSync {
     }
     
     override func requestBadgeIdentifier(for url: URL) {
-        NSLog("9999999999999 FinderSync requestBadgeIdentifier - url: %@", url.path)
-//        
-//        FIFinderSyncController.default().setBadgeIdentifier("synced", for: url)
-//        guard let watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] else {
-//            NSLog("9999999999999 FinderSync requestBadgeIdentifier - no watchedPaths")
-//            return
-//        }
-//        
-//        NSLog("9999999999999 FinderSync requestBadgeIdentifier - watchedPaths: %@", watchedPaths)
-//        
-//        if let path = watchedPaths["path"],
-//           let state = watchedPaths["state"] {
-//            NSLog("9999999999999 FinderSync requestBadgeIdentifier - comparing paths: %@ vs %@", path, url.path)
-//            
-//            // 检查路径是否匹配
-//            if path == url.path {
-//                NSLog("9999999999999 FinderSync requestBadgeIdentifier - setting badge: %@", state)
+        Logger.shared.log("requestBadgeIdentifier: \(url)")
+        queueAccessQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.requestQueue.append(url)
+            if !self.batchScheduled {
+                self.batchScheduled = true
+                self.queueAccessQueue.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+                    self?.processRequestQueue()
+                }
+            }
+        }
+    }
+    
+    private func processRequestQueue() {
+        // 在串行队列内调用，无需加锁
+        let urlsToProcess = self.requestQueue
+        self.requestQueue.removeAll()
+        self.batchScheduled = false
+        guard !urlsToProcess.isEmpty else { return }
+
+
+        sleep(3);
+        DispatchQueue.main.async {
+            for url in urlsToProcess {
+                let state = url.absoluteString.count % 2 == 1 ? "synced" : "syncing"
+                Logger.shared.log("xxxxxxxxx:  \(url) : \(state)")
+                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
+            }
+//            for (url, state) in statusMap {
 //                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
 //            }
-//        }
+        }
     }
     
     // MARK: - Menu and toolbar item support
