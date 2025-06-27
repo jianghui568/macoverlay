@@ -7,6 +7,7 @@
 
 import Cocoa
 
+
 class ViewController: NSViewController {
     @IBOutlet weak var pathField: NSTextField!
     @IBOutlet weak var syncedBtn: NSButton!
@@ -15,11 +16,60 @@ class ViewController: NSViewController {
     private let userDefaults = UserDefaults(suiteName: "group.com.mycompany.MacIconOverlay")
     private let watchedPathsKey = "watchedPaths"
     private let lastUpdateTimeKey = "lastUpdateTime"
-    let socket = UnixSocket()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
         
+//        FileUtils.runTests()
+//        setupUI()
+        
+        do {
+            let server = try UnixSocketServer(groupID: "group.com.mycompany.MacIconOverlay")
+            server.start { message in
+                print("8888888888 received : \(message)")
+                if message == "paths" {
+                    let paths = [
+                        "/Users/player/projects/test",
+                        "/Users/player/projects/sync",
+                        "/Users/player/projects/snv"
+                    ]
+                    let encoder = JSONEncoder()
+                    if let jsonData = try? encoder.encode(paths),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        print("8888888888 return  : \(jsonString)")
+                        return jsonString
+                    } else {
+                        return "[]"
+                    }
+                } else {
+                    // 尝试把 message 解码为 [String]
+                    let decoder = JSONDecoder()
+                    if let data = message.data(using: .utf8),
+                       let arr = try? decoder.decode([String].self, from: data) {
+                        
+                        // 遍历解码得到的数组，构造[String:Int]字典，值为字符串长度的奇偶性（奇数为1，偶数为0）
+                        var dic = [String: Int]()
+                        for item in arr {
+                            dic[item] = item.count % 2 == 1 ? 1 : 0
+                        }
+                        // 编码为json字符串返回
+                        let encoder = JSONEncoder()
+                        if let jsonData = try? encoder.encode(dic),
+                           let jsonString = String(data: jsonData, encoding: .utf8) {
+                            print("8888888888 return  : \(jsonString)")
+                            return jsonString
+                        } else {
+                            return "{}"
+                        }
+                    } else {
+                        print("8888888888   decode error")
+                        return "decode error"
+                    }
+                }
+            }
+        } catch {
+            print("8888888888 启动服务器失败: \(error)")
+        }
         
     }
     
@@ -59,22 +109,7 @@ class ViewController: NSViewController {
             showAlert(message: "请输入有效的路径")
             return
         }
-        
-        socket.send(message: path)
-        return;
-        
-        // 更新 NSUserDefaults 中的状态
-        var watchedPaths = userDefaults?.dictionary(forKey: watchedPathsKey) as? [String: String] ?? [:]
-        watchedPaths["path"] = path
-        watchedPaths["state"] = state
-        NSLog("88888888 watchedPaths : %@", watchedPaths)
-        userDefaults?.set(watchedPaths, forKey: watchedPathsKey)
-        
-        // 更新时间戳
-        userDefaults?.set(Date().timeIntervalSince1970, forKey: lastUpdateTimeKey)
-        userDefaults?.synchronize()
-        
-        showAlert(message: "状态更新成功")
+
     }
     
     func showAlert(message: String) {

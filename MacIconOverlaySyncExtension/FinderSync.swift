@@ -19,30 +19,47 @@ class FinderSync: FIFinderSync {
     private let queueAccessQueue = DispatchQueue(label: "com.mycompany.MacIconOverlay.queueAccess")
     private var batchScheduled = false
     
-    let socket = UnixSocket()
+    let socket = UnixSocket(groupID: "group.com.mycompany.MacIconOverlay")
     
     override init() {
         super.init()
         NSLog("9999999999999FinderSync start ~")
-        
-        let url = URL.init(filePath: "/Users/player/projects/sync")
-        FIFinderSyncController.default().directoryURLs = [url];
-        
         setupBadgeImages()
-        
-        socket.startServer { path in
-            NSLog("9999999999999 socket get path: %@", path);
+
+        // 异步设置管理的目录范围
+        Task {
+            Logger.shared.log("9999999999999 task 11111111")
+            do {
+                // 1. 先异步连接，这会一直等到连接成功或失败
+                try await socket.connect()
+                Logger.shared.log("✅ Socket connected successfully.")
+                
+                // 2. 连接成功后，再发送请求
+                let result = try await socket.sendAndWait("paths")
+                Logger.shared.log("9999999999999 task 2222222222")
+                let decoder = JSONDecoder()
+                if let data = result.data(using: .utf8),
+                   let paths = try? decoder.decode([String].self, from: data) {
+                    let urls = paths.map { URL(fileURLWithPath: $0) }
+                    FIFinderSyncController.default().directoryURLs = Set(urls)
+                    Logger.shared.log("9999999999999 设置directoryURLs: \(urls)")
+                } else {
+                    Logger.shared.log("9999999999999 解析paths失败: \(result)")
+                }
+            } catch {
+                Logger.shared.log("9999999999999 socket.sendAndWait(\"paths\") 失败: \(error)")
+            }
         }
     }
     
     private func setupBadgeImages() {
         if let syncedImage = NSImage(named: "synced") {
-            NSLog("9999999999999FinderSync setup imaged synced")
+            Logger.shared.log("9999999999999FinderSync setup imaged synced")
             FIFinderSyncController.default().setBadgeImage(syncedImage, label: "已同步", forBadgeIdentifier: "synced")
         }
         
         if let syncingImage = NSImage(named: "syncing") {
-            NSLog("9999999999999FinderSync setup imaged syncing")
+            Logger.shared.log("9999999999999FinderSync setup imaged syncing")
             FIFinderSyncController.default().setBadgeImage(syncingImage, label: "同步中", forBadgeIdentifier: "syncing")
         }
     }
@@ -76,19 +93,38 @@ class FinderSync: FIFinderSync {
         self.requestQueue.removeAll()
         self.batchScheduled = false
         guard !urlsToProcess.isEmpty else { return }
-
-
-        sleep(3);
-        DispatchQueue.main.async {
-            for url in urlsToProcess {
-                let state = url.absoluteString.count % 2 == 1 ? "synced" : "syncing"
-                Logger.shared.log("xxxxxxxxx:  \(url) : \(state)")
-                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-            }
-//            for (url, state) in statusMap {
-//                FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-//            }
+        
+        // 1. 转为路径数组
+        let pathArray = urlsToProcess.map { $0.path }
+        let encoder = JSONEncoder()
+        guard let jsonData = try? encoder.encode(pathArray),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            Logger.shared.log("9999999999 编码urlsToProcess失败")
+            return
         }
+
+        // 2. 通过 socket 发送并处理响应
+       Task {
+           do {
+               let response = try await socket.sendAndWait(jsonString)
+               let decoder = JSONDecoder()
+               if let data = response.data(using: .utf8),
+                  let statusMap = try? decoder.decode([String: Int].self, from: data) {
+                   DispatchQueue.main.async {
+                       for (path, s) in statusMap {
+                           let url = URL(fileURLWithPath: path)
+                           let state = s == 1 ? "syncing" : "synced"
+                           Logger.shared.log("setBadgeIdentifier: \(url) : \(state)")
+                           FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
+                       }
+                   }
+               } else {
+                   Logger.shared.log("解析badge响应失败: \(response)")
+               }
+           } catch {
+               Logger.shared.log("socket.sendAndWait 失败: \(error)")
+           }
+       }
     }
     
     // MARK: - Menu and toolbar item support
