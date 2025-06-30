@@ -19,7 +19,7 @@ class FinderSync: FIFinderSync {
     private let queueAccessQueue = DispatchQueue(label: "com.mycompany.MacIconOverlay.queueAccess")
     private var batchScheduled = false
     
-    let socket = UnixSocket(groupID: "group.com.mycompany.MacIconOverlay")
+    let client = UnixSocketClient(groupID: "group.com.mycompany.MacIconOverlay")
     
     override init() {
         super.init()
@@ -29,26 +29,32 @@ class FinderSync: FIFinderSync {
         // 异步设置管理的目录范围
         Task {
             Logger.shared.log("9999999999999 task 11111111")
-            do {
-                // 1. 先异步连接，这会一直等到连接成功或失败
-                try await socket.connect()
-                Logger.shared.log("✅ Socket connected successfully.")
-                
-                // 2. 连接成功后，再发送请求
-                let result = try await socket.sendAndWait("paths")
-                Logger.shared.log("9999999999999 task 2222222222")
-                let decoder = JSONDecoder()
-                if let data = result.data(using: .utf8),
-                   let paths = try? decoder.decode([String].self, from: data) {
-                    let urls = paths.map { URL(fileURLWithPath: $0) }
-                    FIFinderSyncController.default().directoryURLs = Set(urls)
-                    Logger.shared.log("9999999999999 设置directoryURLs: \(urls)")
-                } else {
-                    Logger.shared.log("9999999999999 解析paths失败: \(result)")
-                }
-            } catch {
-                Logger.shared.log("9999999999999 socket.sendAndWait(\"paths\") 失败: \(error)")
+            
+            // 1. 先异步连接，这会一直等到连接成功或失败
+            if !client.connect() {
+                Logger.shared.log("9999999999999 task connect fail")
+                return;
             }
+            Logger.shared.log("✅ 9999 Socket connected successfully.")
+            
+            // 2. 连接成功后，再发送请求
+            let response = client.sendAndReceive("paths", timeout: 5.0)
+            
+            guard let result = response else {
+                Logger.shared.log("9999999999999 task response is nil")
+                return;
+            }
+            Logger.shared.log("9999999999999 task response: \(result)")
+            let decoder = JSONDecoder()
+            if let data = result.data(using: .utf8),
+               let paths = try? decoder.decode([String].self, from: data) {
+                let urls = paths.map { URL(fileURLWithPath: $0) }
+                FIFinderSyncController.default().directoryURLs = Set(urls)
+                Logger.shared.log("9999999999999 设置directoryURLs: \(urls)")
+            } else {
+                Logger.shared.log("9999999999999 解析paths失败: \(result)")
+            }
+        
         }
     }
     
@@ -92,7 +98,10 @@ class FinderSync: FIFinderSync {
         let urlsToProcess = self.requestQueue
         self.requestQueue.removeAll()
         self.batchScheduled = false
-        guard !urlsToProcess.isEmpty else { return }
+        guard !urlsToProcess.isEmpty else {
+            self.batchScheduled = false
+            return
+        }
         
         // 1. 转为路径数组
         let pathArray = urlsToProcess.map { $0.path }
@@ -100,30 +109,35 @@ class FinderSync: FIFinderSync {
         guard let jsonData = try? encoder.encode(pathArray),
               let jsonString = String(data: jsonData, encoding: .utf8) else {
             Logger.shared.log("9999999999 编码urlsToProcess失败")
+            self.batchScheduled = false
             return
         }
 
         // 2. 通过 socket 发送并处理响应
        Task {
-           do {
-               let response = try await socket.sendAndWait(jsonString)
-               let decoder = JSONDecoder()
-               if let data = response.data(using: .utf8),
-                  let statusMap = try? decoder.decode([String: Int].self, from: data) {
-                   DispatchQueue.main.async {
-                       for (path, s) in statusMap {
-                           let url = URL(fileURLWithPath: path)
-                           let state = s == 1 ? "syncing" : "synced"
-                           Logger.shared.log("setBadgeIdentifier: \(url) : \(state)")
-                           FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
-                       }
-                   }
-               } else {
-                   Logger.shared.log("解析badge响应失败: \(response)")
-               }
-           } catch {
-               Logger.shared.log("socket.sendAndWait 失败: \(error)")
+           let result = client.sendAndReceive(jsonString, timeout: 5.0)
+           guard let response = result else {
+               Logger.shared.log("9999999999 receive nil")
+               self.batchScheduled = false
+               return;
            }
+           let decoder = JSONDecoder()
+           if let data = response.data(using: .utf8),
+              let statusMap = try? decoder.decode([String: Int].self, from: data) {
+               DispatchQueue.main.async {
+                   for (path, s) in statusMap {
+                       let url = URL(fileURLWithPath: path)
+                       let state = s == 1 ? "syncing" : "synced"
+                       Logger.shared.log("setBadgeIdentifier: \(url) : \(state)")
+                       FIFinderSyncController.default().setBadgeIdentifier(state, for: url)
+                   }
+                   self.batchScheduled = false
+               }
+           } else {
+               self.batchScheduled = false
+               Logger.shared.log("解析badge响应失败: \(response)")
+           }
+
        }
     }
     

@@ -29,6 +29,28 @@ class ViewController: NSViewController {
         
         // 设置UI
         setupUI()
+        return;
+        Task {
+                    print("9999999999999 task 11111111")
+                    
+                    // 1. 先异步连接，这会一直等到连接成功或失败
+                    if !client.connect() {
+                        print("9999999999999 task connect fail")
+                        return;
+                    }
+                    print("✅ 9999999999 Socket connected successfully.")
+                    
+                    // 2. 连接成功后，再发送请求
+                    let response = client.sendAndReceive("paths", timeout: 5.0)
+                    
+                    guard let result = response else {
+                        print("9999999999999 task response is nil")
+                        return;
+                    }
+                    print("9999999999999 task response: \(result)")
+                    
+                
+                }
     }
     
     /// 启动Unix Socket服务器
@@ -52,40 +74,34 @@ class ViewController: NSViewController {
             return "pong"
         } else if message.hasPrefix("paths") {
             // 返回监控的路径列表
-            let paths = getWatchedPaths()
+            let paths = ["/Users/player/projects/sync",
+                         "/Users/player/projects/test",
+                         "/Users/player/projects/navicate"]
             if let jsonData = try? JSONEncoder().encode(paths),
                let jsonString = String(data: jsonData, encoding: .utf8) {
                 return jsonString
             }
             return "[]"
-        } else if message.hasPrefix("status:") {
-            // 处理状态查询
-            let path = String(message.dropFirst(7))
-            let status = getFileStatus(for: path)
-            return "status:\(path):\(status)"
-        } else if message.hasPrefix("update:") {
-            // 处理状态更新
-            let components = message.components(separatedBy: ":")
-            if components.count >= 3 {
-                let path = components[1]
-                let status = components[2]
-                updateFileStatus(path: path, status: status)
-                return "updated:\(path):\(status)"
+        } else  {
+            if let data = message.data(using: .utf8) {
+                do {
+                    let arr = try JSONDecoder().decode([String].self, from: data)
+                    var map = [String: Int]();
+                    for str in arr {
+                        map[str] = str.count % 2 == 1 ? 1 : 0
+                    }
+                    if let jsonData = try? JSONEncoder().encode(map),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        return jsonString
+                    }
+                    print("xxxxxxxxxxxx message data 22222222222")
+                    return "{}"
+                } catch {
+                    print("xxxxxxxxxxxxxxxxxxx decode error： \(error)")
+                }
             }
-            return "error:invalid_format"
-        } else if message.hasPrefix("add:") {
-            // 添加监控路径
-            let path = String(message.dropFirst(4))
-            addWatchedPath(path)
-            return "added:\(path)"
-        } else if message.hasPrefix("remove:") {
-            // 移除监控路径
-            let path = String(message.dropFirst(7))
-            removeWatchedPath(path)
-            return "removed:\(path)"
-        } else {
-            // 默认回显
-            return "echo:\(message)"
+            print("xxxxxxxxxxxx message data 111111111")
+            return "{}";
         }
     }
     
@@ -170,16 +186,12 @@ class ViewController: NSViewController {
             return
         }
 
+//        return;
         // 使用新的同步请求-响应功能
         if client.connect() {
-            let success = client.updateStatus(path: path, status: state)
-            if success {
-                print("✅ Status updated successfully: \(path) -> \(state)")
-                showAlert(message: "状态更新成功")
-            } else {
-                print("❌ Failed to update status")
-                showAlert(message: "状态更新失败")
-            }
+            
+            let response = client.sendAndReceive("paths", timeout: 3.0)
+            print("✅ 888888888888 Status updated successfully: \(response)")
         } else {
             print("❌ Failed to connect to server")
             showAlert(message: "连接服务器失败")
