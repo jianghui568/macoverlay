@@ -1,0 +1,8 @@
+framework module "Gosocket" {
+	header "ref.h"
+    header "Gosocket.objc.h"
+    header "Universe.objc.h"
+    header "Gosocket.h"
+
+    export *
+}

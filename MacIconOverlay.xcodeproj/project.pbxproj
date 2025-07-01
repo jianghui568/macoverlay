@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00C870ED2E138A92001EC4F4 /* TestA.m in Sources */ = {isa = PBXBuildFile; fileRef = 00C870EC2E138A92001EC4F4 /* TestA.m */; };
+		00C870EF2E138B17001EC4F4 /* Gosocket.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00C870EE2E138B17001EC4F4 /* Gosocket.framework */; };
 		00D3F59E2E0E3FC3005CE8C2 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D3F59D2E0E3FAE005CE8C2 /* FileUtils.swift */; };
 		00D3F59F2E0E3FC3005CE8C2 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D3F59D2E0E3FAE005CE8C2 /* FileUtils.swift */; };
 		00D3F5A12E0E84C4005CE8C2 /* UnixSocketAsync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D3F5A02E0E84BA005CE8C2 /* UnixSocketAsync.swift */; };
@@ -50,6 +52,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		00C870EA2E138A92001EC4F4 /* MacIconOverlay-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MacIconOverlay-Bridging-Header.h"; sourceTree = "<group>"; };
+		00C870EB2E138A92001EC4F4 /* TestA.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TestA.h; sourceTree = "<group>"; };
+		00C870EC2E138A92001EC4F4 /* TestA.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TestA.m; sourceTree = "<group>"; };
+		00C870EE2E138B17001EC4F4 /* Gosocket.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Gosocket.framework; sourceTree = "<group>"; };
 		00D3F59D2E0E3FAE005CE8C2 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		00D3F5A02E0E84BA005CE8C2 /* UnixSocketAsync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnixSocketAsync.swift; sourceTree = "<group>"; };
 		00D3F5A32E0E8C39005CE8C2 /* UnixSocketServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnixSocketServer.swift; sourceTree = "<group>"; };
@@ -73,6 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				00C870EF2E138B17001EC4F4 /* Gosocket.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,11 +126,15 @@
 		7DD5746E2DFE5F7C003BE880 /* MacIconOverlay */ = {
 			isa = PBXGroup;
 			children = (
+				00C870EE2E138B17001EC4F4 /* Gosocket.framework */,
 				7DD5746F2DFE5F7C003BE880 /* AppDelegate.swift */,
 				7DD574712DFE5F7C003BE880 /* ViewController.swift */,
 				7DD574732DFE5F7E003BE880 /* Assets.xcassets */,
 				7DD574752DFE5F7E003BE880 /* Main.storyboard */,
 				7DD574782DFE5F7E003BE880 /* MacIconOverlay.entitlements */,
+				00C870EB2E138A92001EC4F4 /* TestA.h */,
+				00C870EC2E138A92001EC4F4 /* TestA.m */,
+				00C870EA2E138A92001EC4F4 /* MacIconOverlay-Bridging-Header.h */,
 			);
 			path = MacIconOverlay;
 			sourceTree = "<group>";
@@ -191,6 +202,7 @@
 				TargetAttributes = {
 					7DD5746B2DFE5F7C003BE880 = {
 						CreatedOnToolsVersion = 14.3.1;
+						LastSwiftMigration = 1640;
 					};
 					7DD574812DFE5FCE003BE880 = {
 						CreatedOnToolsVersion = 14.3.1;
@@ -244,6 +256,7 @@
 				7DD574722DFE5F7C003BE880 /* ViewController.swift in Sources */,
 				7DD574702DFE5F7C003BE880 /* AppDelegate.swift in Sources */,
 				00D3F5A42E0E8C39005CE8C2 /* UnixSocketServer.swift in Sources */,
+				00C870ED2E138A92001EC4F4 /* TestA.m in Sources */,
 				7D1667EE2E11430D00006B7A /* UnixSocketClient.swift in Sources */,
 				00D3F5A22E0E84C4005CE8C2 /* UnixSocketAsync.swift in Sources */,
 				00D3F59F2E0E3FC3005CE8C2 /* FileUtils.swift in Sources */,
@@ -404,12 +417,17 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MacIconOverlay/MacIconOverlay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZGYE6H598Y;
 				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MacIconOverlay",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -422,6 +440,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xinxin.MacIconOverlay;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MacIconOverlay/MacIconOverlay-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -432,12 +452,17 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = MacIconOverlay/MacIconOverlay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZGYE6H598Y;
 				ENABLE_HARDENED_RUNTIME = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/MacIconOverlay",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -450,6 +475,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.xinxin.MacIconOverlay;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MacIconOverlay/MacIconOverlay-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;

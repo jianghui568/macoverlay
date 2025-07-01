@@ -7,6 +7,7 @@
 
 import Cocoa
 import Network
+import Gosocket
 
 class ViewController: NSViewController {
     @IBOutlet weak var pathField: NSTextField!
@@ -24,33 +25,21 @@ class ViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // 启动Unix Socket服务器
-        startUnixSocketServer()
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.mycompany.MacIconOverlay") else {
+            print("9999999999999 containerURL error ~~~~~~~~")
+            return
+        }
+        let path = containerURL.appendingPathComponent("unix_socket.sock").path
+ 
         
         // 设置UI
         setupUI()
-        return;
-        Task {
-                    print("9999999999999 task 11111111")
-                    
-                    // 1. 先异步连接，这会一直等到连接成功或失败
-                    if !client.connect() {
-                        print("9999999999999 task connect fail")
-                        return;
-                    }
-                    print("✅ 9999999999 Socket connected successfully.")
-                    
-                    // 2. 连接成功后，再发送请求
-                    let response = client.sendAndReceive("paths", timeout: 5.0)
-                    
-                    guard let result = response else {
-                        print("9999999999999 task response is nil")
-                        return;
-                    }
-                    print("9999999999999 task response: \(result)")
-                    
-                
-                }
+        DispatchQueue.global().async {
+            GosocketRun(path)
+        }
+//        Task {
+//            GosocketRun(path)
+//        }
     }
     
     /// 启动Unix Socket服务器

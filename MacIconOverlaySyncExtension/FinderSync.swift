@@ -23,38 +23,47 @@ class FinderSync: FIFinderSync {
     
     override init() {
         super.init()
-        NSLog("9999999999999FinderSync start ~")
+        NSLog("FinderSync start ~")
         setupBadgeImages()
-
-        // 异步设置管理的目录范围
-        Task {
-            Logger.shared.log("9999999999999 task 11111111")
-            
-            // 1. 先异步连接，这会一直等到连接成功或失败
-            if !client.connect() {
-                Logger.shared.log("9999999999999 task connect fail")
-                return;
+        initializeDirectoryURLsAsync()
+    }
+    
+    private func initializeDirectoryURLsAsync() {
+        Task.detached { [weak self] in
+            guard let self = self else { return }
+            Logger.shared.log("FinderSync: initializing directory URLs")
+            var lastDirectoryURLs: Set<URL> = []
+            while true {
+                if !self.client.connect() {
+                    Logger.shared.log("FinderSync: client.connect() failed")
+                    try? await Task.sleep(nanoseconds: 10_000_000_000)
+                    continue
+                }
+                Logger.shared.log("FinderSync: Socket connected successfully.")
+                guard let response = self.client.sendAndReceive("paths", timeout: 5.0) else {
+                    Logger.shared.log("FinderSync: sendAndReceive(\"paths\") response is nil")
+                    try? await Task.sleep(nanoseconds: 10_000_000_000)
+                    continue
+                }
+                Logger.shared.log("FinderSync: received response: \(response)")
+                guard let data = response.data(using: .utf8),
+                      let paths = try? JSONDecoder().decode([String].self, from: data) else {
+                    Logger.shared.log("FinderSync: failed to decode paths from response: \(response)")
+                    try? await Task.sleep(nanoseconds: 10_000_000_000)
+                    continue
+                }
+                let urls = Set(paths.map { URL(fileURLWithPath: $0) })
+                if urls != lastDirectoryURLs {
+                    lastDirectoryURLs = urls
+                    DispatchQueue.main.async {
+                        FIFinderSyncController.default().directoryURLs = urls
+                        Logger.shared.log("FinderSync: set directoryURLs: \(urls)")
+                    }
+                } else {
+                    Logger.shared.log("FinderSync: directoryURLs unchanged")
+                }
+                try? await Task.sleep(nanoseconds: 10_000_000_000)
             }
-            Logger.shared.log("✅ 9999 Socket connected successfully.")
-            
-            // 2. 连接成功后，再发送请求
-            let response = client.sendAndReceive("paths", timeout: 5.0)
-            
-            guard let result = response else {
-                Logger.shared.log("9999999999999 task response is nil")
-                return;
-            }
-            Logger.shared.log("9999999999999 task response: \(result)")
-            let decoder = JSONDecoder()
-            if let data = result.data(using: .utf8),
-               let paths = try? decoder.decode([String].self, from: data) {
-                let urls = paths.map { URL(fileURLWithPath: $0) }
-                FIFinderSyncController.default().directoryURLs = Set(urls)
-                Logger.shared.log("9999999999999 设置directoryURLs: \(urls)")
-            } else {
-                Logger.shared.log("9999999999999 解析paths失败: \(result)")
-            }
-        
         }
     }
     
